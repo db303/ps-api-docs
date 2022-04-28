@@ -1,0 +1,10 @@
+{
+  "name": "ps-api-docs",
+  "version": "1.0.0",
+  "description": "Pattersaver API documentation",
+  "scripts": {
+    "serve": "npx @redocly/openapi-cli preview-docs docs.yaml"
+  },
+  "author": "db303",
+  "license": "ISC"
+}

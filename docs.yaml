@@ -1,0 +1,432 @@
+openapi: 3.0.0
+info:
+  title: PatternSaver API
+  description: Documentation of the PatternSaver.com website API
+  version: 0.0.1
+
+servers:
+  - url: https://patternsaver.com
+    description: PatternSaver.com production
+
+tags:
+  - name: auth
+    description: Everything about auth
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: id
+
+paths:
+  /auth/signup:
+    post:
+      summary: Signup.
+      tags:
+        - auth
+      description: Creates inactive user and sends account acctivation code via email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  description: User name
+                  type: string
+                password:
+                  description: User password
+                  type: string
+                email:
+                  description: User email
+                  type: string
+            example:
+              username: db303
+              password: House!909
+              email: acid@house.net
+                  
+        
+      responses:
+        '200':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: string
+                    example:
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Json deserialize error: missing field `username`"
+        
+        '409':
+          description: Username or email is taken.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: "Username not available"
+        
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "Failed to perform a query to retrieve stored credentials."
+          
+      
+  /auth/login:
+    post:
+      summary: Log in.
+      tags:
+        - auth
+      description: Logs in the user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  description: User name
+                  type: string
+                password:
+                  description: User password
+                  type: string
+            example:
+              username: roland
+              password: House!909
+                  
+      responses:
+        '200':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: string
+                    example:
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: 	id=+4GPcR7rUbertZTQIccx6weaO5719w88wp+onOdx%2Fd45RlNaFOJyj1%2FrXPuultpZbe+Ucaw3Fh00GgboY4eUVssSS5s3VV2wMt%2Fv6ouFzQocHUkndd3B6nIVw9Q%3D; Path=/; Secure; HttpOnly; SameSite=Lax; Domain=127.0.0.1
+        '401':
+          description: Invalid credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "Authentication failed."
+        '403':
+          description: Account is not active.
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: fail
+                    message:
+                      type: string
+                      example: "Account is not active."
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: error
+                    message:
+                      type: string
+                      example: "Unexpected error"
+        
+  /auth/signup/activate:
+    get:
+      summary: Activate user.
+      tags:
+        - auth
+      description: Activates a new user with a provided token
+      parameters:
+        - name: activation_token
+          in: query
+          description: Activation token received via email
+          required: true
+          explode: true
+          schema:
+            type: string
+            example: 2Ig5l6jcH1aZP7Ipc30XHIMEq
+                  
+      responses:
+        '200':
+          description: Account activated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: string
+                    example:
+          
+        '401':
+          description: Unknown token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "Unknown activation token"
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: "Invalid request"
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: error
+                    message:
+                      type: string
+                      example: "Unexpected error"
+
+  /auth/signup/activate/resend:
+    post:
+      summary: Resend activation token.
+      tags:
+        - auth
+      description: Sends a new activation link to provided email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: User email
+                  type: string
+            example:
+              email: acid@house.net          
+      responses:
+        '202':
+          description: Email accepted for processing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: string
+                    example:
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: error
+                    message:
+                      type: string
+                      example: "Unexpected error"
+
+  /auth/reset_password/request:
+    post:
+      summary: Request password reset.
+      tags:
+        - auth
+      description: Sends reset password link to provided email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: User email
+                  type: string
+            example:
+              email: acid@house.net          
+      responses:
+        '202':
+          description: Email accepted for processing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: string
+                    example:
+        '500':
+          description: Unexpected error.
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: error
+                    message:
+                      type: string
+                      example: "Unexpected error"          
+
+  /auth/change_password:
+    post:
+        summary: Change password.
+        tags:
+          - auth
+        description: Change user password with reset token
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reset_token:
+                    description: Password reset token
+                    type: string
+                  password:
+                    description: User password
+                    type: string
+                  password_again:
+                    description: Repeat password
+                    type: string
+              example:
+                reset_token: db303
+                password: House!909
+                password_again: House!909
+                            
+        responses:
+          '200':
+            description: Success.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: success
+                    data:
+                      type: string
+                      example:
+          '400':
+            description: Bad request.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: fail
+                    message:
+                      type: string
+                      example: "Bad request"
+          '401':
+            description: Invalid data.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: fail
+                    message:
+                      type: string
+                      example: "Invalid token"
+          '500':
+            description: Unexpected error.
+            content:
+              application/json:
+                  schema:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: error
+                      message:
+                        type: string
+                        example: "Unexpected error"
